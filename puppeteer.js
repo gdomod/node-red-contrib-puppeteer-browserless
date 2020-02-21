@@ -60,7 +60,7 @@ module.exports = function (RED) {
                     node.status({fill: "red", shape: "dot", text: e.name});
                     node.send([null, e]);
                 } finally {
-                    if (browser) {
+                    if (browser && msg.closeInstance !== false) {
                         await browser.close(); //todo do we need to wait here?
                     }
                     node.status({});
