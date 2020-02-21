@@ -38,7 +38,12 @@ module.exports = function (RED) {
             (async () => {
                 const outputFormat = msg.outputFormat || configOutputFormat;
                 node.status({fill: "green", shape: "dot", text: 'Launching browser'});
-                const browser = await puppeteer.launch();
+                let browser;
+                if (msg.headless === false) {
+                    browser = await puppeteer.launch({headless: false});
+                } else {
+                    browser = await puppeteer.launch();
+                }
                 node.status({fill: "green", shape: "dot", text: 'Loading page'});
                 const page = await browser.newPage();
                 await page.goto(url);
