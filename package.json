@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-puppeteer-simple",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "a wrapper around puppeteer",
   "main": "index.js",
   "scripts": {

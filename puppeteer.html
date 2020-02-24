@@ -48,4 +48,8 @@
     <p><b> Name </b> The name of this node</p>
     <p><b> Selector </b> The css selector to apply on the page. This can be set in the config UI or passed in via msg.selector. See <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors">selectors</a></p>
     <p><b> Output Format </b> Choose textContent to extract text from the matches got by applying the selector. Choose rawHTML to get the entire html element match. This can be specified in the config UI or passed in as msg.outputFormat  </p>
+    <p><b> Configuration via Input Message</b></p>
+    <p><b> msg.headless</b> Set to false to disable headless mode- will launch a UI instance of the browser- may be useful while debugging. Defaults to true.</p>
+    <p><b> msg.closeInstance</b> Set to false to not close browser instance when done- may be useful while debugging. DO NOT use this in production as this will cause memory leaks. Defaults to true.</p>
+    <p><b> msg.sandbox</b> Set to false to launch the browser without a sandbox- use for trusted sites only. See <a href="https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md#setting-up-chrome-linux-sandbox">here</a> on how to configure a sandbox. Defaults to true.</p>
 </script>

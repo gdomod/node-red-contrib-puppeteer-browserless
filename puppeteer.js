@@ -29,6 +29,17 @@ module.exports = function (RED) {
             return true;
         }
 
+        function getOptions(headless, sandbox) {
+            let options = {};
+            if (headless === false) {
+                options.headless = false;
+            }
+            if(sandbox === false){
+                options.args = ['--no-sandbox', '--disable-setuid-sandbox'];
+            }
+            return options;
+        }
+
         node.on('input', function (msg) {
             const url = msg.topic || msg.url;
             const selector = msg.selector || configSelector;
@@ -36,19 +47,16 @@ module.exports = function (RED) {
                 return;
             }
             (async () => {
-                const outputFormat = msg.outputFormat || configOutputFormat;
-                node.status({fill: "green", shape: "dot", text: 'Launching browser'});
                 let browser;
-                if (msg.headless === false) {
-                    browser = await puppeteer.launch({headless: false});
-                } else {
-                    browser = await puppeteer.launch();
-                }
-                node.status({fill: "green", shape: "dot", text: 'Loading page'});
-                const page = await browser.newPage();
-                await page.goto(url);
-                node.status({fill: "green", shape: "dot", text: 'Applying selector'});
                 try {
+                    const outputFormat = msg.outputFormat || configOutputFormat;
+                    node.status({fill: "green", shape: "dot", text: 'Launching browser'});
+                    const options = getOptions(msg.headless, msg.sandbox);
+                    browser = await puppeteer.launch(options);
+                    node.status({fill: "green", shape: "dot", text: 'Loading page'});
+                    const page = await browser.newPage();
+                    await page.goto(url);
+                    node.status({fill: "green", shape: "dot", text: 'Applying selector'});
                     const matches = await page.$$eval(selector, function (matches) { //cant use arrow function here as we need to access the arguments object
                         const format = arguments[1];
                         return matches.map(match => {
@@ -68,6 +76,5 @@ module.exports = function (RED) {
             })();
         });
     }
-
     RED.nodes.registerType("puppeteer", PuppeteerNode);
 };
