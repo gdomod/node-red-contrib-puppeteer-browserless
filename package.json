@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/umasudhan/node-red-contrib-puppeteer.git"
+    "url": "git+https://github.com/gdomod/node-red-contrib-puppeteer.git"
   },
   "keywords": [
     "node-red",
@@ -25,9 +25,9 @@
   "author": "uma",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/umasudhan/node-red-contrib-puppeteer/issues"
+    "url": "https://github.com/gdomod/node-red-contrib-puppeteer/issues"
   },
-  "homepage": "https://github.com/umasudhan/node-red-contrib-puppeteer#readme",
+  "homepage": "https://github.com/gdomod/node-red-contrib-puppeteer#readme",
   "dependencies": {
     "puppeteer": "^2.1.1"
   }
