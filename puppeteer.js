@@ -11,24 +11,6 @@ module.exports = function (RED) {
         const configOutputFormat = config.outputFormat;
         const configSelector = config.selector;
 
-        function validateParams(url, selector, outputFormat) {
-            if (!url) {
-                node.send([null, 'No url specified in msg.topic or msg.url']);
-                return false;
-            }
-            if (!selector) {
-                node.send([null, 'No selector specified in msg.selector or the node config']);
-                return false;
-            }
-            if (outputFormat) {
-                if (!Object.keys(outputProperty).includes(outputFormat)) {
-                    node.send([null, 'Invalid output format specified- msg.outputFormat must be textContent or rawHTML']);
-                    return false;
-                }
-            }
-            return true;
-        }
-
         function getOptions(headless, sandbox) {
             let options = {};
             if (headless === false) {
@@ -41,11 +23,9 @@ module.exports = function (RED) {
         }
 
         node.on('input', function (msg) {
-            const url = msg.topic || msg.url;
-            const selector = msg.selector || configSelector;
-            if (!validateParams(url, selector, msg.outputFormat)) {
-                return;
-            }
+            //const url = msg.topic || msg.url;
+            //const selector = msg.selector || configSelector;
+            
             (async () => {
                 let browser;
                 try {
