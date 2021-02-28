@@ -1,55 +1,133 @@
+<script type="text/x-red" data-template-name="puppeteer-function">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+        <input type="text" id="node-input-name" data-i18n="node-red:[placeholder]common.label.name">
+    </div>
+    <div class="form-row" style="margin-bottom: 0px;">
+        <label for="node-input-func"><i class="fa fa-wrench"></i> <span data-i18n="node-red:function.label.function"></span></label>
+        <input type="hidden" id="node-input-func" autofocus="autofocus">
+        <input type="hidden" id="node-input-noerr">
+    </div>
+    <div class="form-row node-text-editor-row" style="position:relative">
+        <div style="position: absolute; right:0; bottom:calc(100% + 3px);"><button id="node-function-expand-js" class="editor-button editor-button-small"><i class="fa fa-expand"></i></button></div>
+        <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-func-editor" ></div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-outputs"><i class="fa fa-random"></i> <span data-i18n="node-red:function.label.outputs"></span></label>
+        <input id="node-input-outputs" style="width: 60px;" value="1">
+    </div>
+    <div class="form-tips"><span data-i18n="node-red:function.tip"></span></div>
+</script>
+
+<script type="text/x-red" data-help-name="puppeteer-function">
+    <p>A JavaScript function block to run puppeteer against the messages being received by the node.</p>
+   
+</script>
+
 <script type="text/javascript">
-    RED.nodes.registerType('puppeteer', {
+    RED.nodes.registerType('puppeteer-function',{
+        color:"#fdd0a2",
         category: 'function',
-        color: '#2696be',
         defaults: {
-            name: {value: ""},
-            selector: {value: ""},
-            outputFormat: {value: "rawHTML"}
+            name: {value:""},
+            func: {value:"msg.payload=$('title').text();\nreturn msg;"},
+            outputs: {value:1},
+            noerr: {value:0,required:true,validate:function(v) { return ((!v) || (v === 0)) ? true : false; }}
         },
-        inputs: 1,
-        outputs: 2,
-        outputLabels: ["stdout", "stderr"],
-        icon: "puppeteer.png",
-        label: function () {
-            return this.name || "puppeteer";
+        inputs:1,
+        outputs:1,
+        icon: "function.png",
+        label: function() {
+            return this.name||this._("puppeteer.label");
         },
-        oneditprepare:  function(){
-            if(this.outputformat){
-                $("#node-input-outputFormat").val('this.outputformat');
-            }else{
-                $('#node-input-outputFormat option:nth-child(0)').attr('selected','selected');
+        paletteLabel: function(){
+          return this._("puppeteer.paletteLabel");
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
+        },
+        oneditprepare: function() {
+            var that = this;
+            $( "#node-input-outputs" ).spinner({
+                min:1,
+                change: function(event, ui) {
+                    var value = this.value;
+                    if (!value.match(/^\d+$/)) { value = 1;  }
+                    else if (value < this.min) { value = this.min; }
+                    if (value !== this.value) { $(this).spinner("value", value); }
+                }
+            });
+            this.editor = RED.editor.createEditor({
+                id: 'node-input-func-editor',
+                mode: 'ace/mode/javascript',
+                value: $("#node-input-func").val(),
+                globals: {
+                    msg:true,
+                    context:true,
+                    RED: true,
+                    util: true,
+                    flow: true,
+                    global: true,
+                    console: true,
+                    Buffer: true,
+                    setTimeout: true,
+                    clearTimeout: true,
+                    setInterval: true,
+                    clearInterval: true
+                }
+            });
+            RED.library.create({
+                url:"functions", // where to get the data from
+                type:"function", // the type of object the library is for
+                editor:this.editor, // the field name the main text body goes to
+                mode:"ace/mode/javascript",
+                fields:['name','outputs']
+            });
+            this.editor.focus();
+            $("#node-function-expand-js").click(function(e) {
+                e.preventDefault();
+                var value = that.editor.getValue();
+                RED.editor.editJavaScript({
+                    value: value,
+                    cursor: that.editor.getCursorPosition(),
+                    complete: function(v,cursor) {
+                        that.editor.setValue(v, -1);
+                        that.editor.gotoLine(cursor.row+1,cursor.column,false);
+                        setTimeout(function() {
+                            that.editor.focus();
+                        },300);
+                    }
+                })
+            })
+        },
+        oneditsave: function() {
+            var annot = this.editor.getSession().getAnnotations();
+            this.noerr = 0;
+            $("#node-input-noerr").val(0);
+            for (var k=0; k < annot.length; k++) {
+                if (annot[k].type === "error") {
+                    $("#node-input-noerr").val(annot.length);
+                    this.noerr = annot.length;
+                }
             }
+            $("#node-input-func").val(this.editor.getValue());
+            this.editor.destroy();
+            delete this.editor;
+        },
+        oneditcancel: function() {
+            this.editor.destroy();
+            delete this.editor;
+        },
+        oneditresize: function(size) {
+            var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+            var height = $("#dialog-form").height();
+            for (var i=0; i<rows.size(); i++) {
+                height -= $(rows[i]).outerHeight(true);
+            }
+            var editorRow = $("#dialog-form>div.node-text-editor-row");
+            height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+            $(".node-text-editor").css("height",height+"px");
+            this.editor.resize();
         }
     });
-</script>
-
-<script type="text/html" data-template-name="puppeteer">
-    <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-selector"><i class="icon-tag"></i> CSS Selector</label>
-        <input type="text" id="node-input-selector" placeholder="selector">
-    </div>
-    <div class="form-row" id="output-format-div">
-        <label for="node-input-outputFormat"><i class="fa fa-link"></i> Output Format</label>
-        <select id="node-input-outputFormat">
-            <option value="rawHTML" selected>rawHTML</option>
-            <option value="textContent">textContent</option>
-        </select>
-    </div>
-</script>
-
-<script type="text/html" data-help-name="puppeteer">
-    <p>A simple node to launch a chromium instance in headless mode and select content. Uses <a href="https://github.com/puppeteer/puppeteer">puppeteer</a> </p>
-    <p><b>UI Configuration</b></p>
-    <p><b> Name </b> The name of this node</p>
-    <p><b> Selector </b> The css selector to apply on the page. This can be set in the config UI or passed in via msg.selector. See <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors">selectors</a></p>
-    <p><b> Output Format </b> Choose textContent to extract text from the matches got by applying the selector. Choose rawHTML to get the entire html element match. This can be specified in the config UI or passed in as msg.outputFormat  </p>
-    <p><b> Configuration via Input Message</b></p>
-    <p><b> msg.headless</b> Set to false to disable headless mode- will launch a UI instance of the browser- may be useful while debugging. Defaults to true.</p>
-    <p><b> msg.closeInstance</b> Set to false to not close browser instance when done- may be useful while debugging. DO NOT use this in production as this will cause memory leaks. Defaults to true.</p>
-    <p><b> msg.sandbox</b> Set to false to launch the browser without a sandbox- use for trusted sites only. See <a href="https://github.com/puppeteer/puppeteer/blob/master/docs/troubleshooting.md#setting-up-chrome-linux-sandbox">here</a> on how to configure a sandbox. Defaults to true.</p>
 </script>
